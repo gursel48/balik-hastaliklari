@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Balık Hastalıkları ve Yetiştiricilik Yönetimi Deneme Sınavı</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      padding-bottom: 80px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .menu-container, .quiz-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .menu-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+    }
+
+    .menu-btn.locked {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      cursor: not-allowed;
+      order: 999;
+      opacity: 0.85;
+    }
+
+    .wrong-menu-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(135deg, #dc3545, #a71d2a);
+      color: white;
+      order: 9999;
+      animation: wrongBlink 10s infinite;
+    }
+
+    @keyframes wrongBlink {
+      0%, 45% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69,0);
+      }
+      50% {
+        opacity: 0.35;
+        transform: scale(1.02);
+        box-shadow: 0 0 18px rgba(220,53,69,0.45);
+      }
+      55%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(220,53,69,0);
+      }
+    }
+
+    .quiz-container {
+      display: none;
+      position: relative;
+      padding-top: 85px;
+      min-height: 100vh;
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 6px;
+      background: #28a745;
+      transition: 0.3s;
+      width: 0%;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .main-menu-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: calc(1rem + 4pt);
+      color: #333;
+      padding: 5px 0;
+    }
+
+    .header-info {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-right: 110px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .header-subject {
+      font-weight: normal;
+      color: #777;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .retry-badge {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffe69c;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .question-title {
+      margin-top: 0;
+      margin-bottom: 16px;
+      line-height: 1.45;
+      font-size: 1.2rem;
+      color: #222;
+    }
+
+    .option-btn {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      background: #f8f9fa;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      position: relative;
+    }
+
+    .option-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .option-btn.correct {
+      background: #d4edda !important;
+      border-color: #28a745 !important;
+      color: #155724 !important;
+      font-weight: bold;
+    }
+
+    .option-btn.wrong {
+      background: #f8d7da !important;
+      border-color: #dc3545 !important;
+      color: #721c24 !important;
+      font-weight: bold;
+    }
+
+    .tick {
+      display: inline-block;
+      margin-left: 10px;
+      color: #1f9d45;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0.4);
+    }
+
+    .tick.show {
+      animation: popTick 0.45s ease forwards;
+    }
+
+    @keyframes popTick {
+      0%   { opacity: 0; transform: scale(0.4); }
+      60%  { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .explanation {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background: #eaf2f8;
+      border-left: 5px solid #2980b9;
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .next-btn { background: #007bff; }
+    .prev-btn {
+      background: #e9ecef;
+      color: #dc3545 !important;
+      border: 1px solid #ddd;
+    }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      color: #666;
+      font-weight: bold;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .disclaimer-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fdfdfd;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      color: #888;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .disclaimer-title {
+      display: block;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+
+    .source-tag {
+      position: fixed;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      color: #777;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      z-index: 9999;
+    }
+
+    .reset-set-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #ffc107;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    @media (max-width: 480px) {
+      .quiz-container {
+        padding-top: 110px;
+      }
+
+      .header-info {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        padding-right: 104px;
+        align-items: flex-start;
+      }
+
+      .header-left {
+        display: block;
+        padding-right: 6px;
+      }
+
+      .main-menu-btn {
+        display: block;
+        font-size: 0.95rem;
+        padding: 0;
+        margin-bottom: 6px;
+      }
+
+      .header-subject {
+        display: block;
+        margin: 0;
+        font-size: 0.82rem;
+        line-height: 1.3;
+        max-width: 100%;
+      }
+
+      .question-title {
+        font-size: 1.05rem;
+      }
+
+      .option-btn {
+        font-size: 1rem;
+        padding: 14px;
+      }
+
+      .reset-set-btn {
+        top: 12px;
+        right: 12px;
+        font-size: 0.75rem;
+        padding: 7px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="menuContainer" class="menu-container">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:20px;">
+      <h1 id="mainTitle" style="margin:0;">Balık Hastalıkları ve Yetiştiricilik Yönetimi Deneme Sınavı</h1>
+      <button onclick="clearAllStatistics()" style="background:#dc3545; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:0.75rem;">
+        Verileri Sıfırla
+      </button>
+    </div>
+
+    <div id="menuGrid" class="menu-grid"></div>
+
+    <div class="disclaimer-box">
+      <span class="disclaimer-title">⚠️ Önemli Uyarı</span>
+      Bu sistemde yer alan içerikler yalnızca eğitim amaçlıdır. İçeriklerin kullanımından doğabilecek doğrudan veya dolaylı hiçbir sorumluluk kabul edilmez. Tüm kullanım sorumluluğu kullanıcıya aittir.
+    </div>
+  </div>
+
+  <div id="quizContainer" class="quiz-container">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="header-info">
+      <div class="header-left">
+        <button onclick="showMenu()" class="main-menu-btn">☰ Ana Menü</button>
+        <span id="headerSubject" class="header-subject"></span>
+      </div>
+    </div>
+
+    <button onclick="resetCurrentSet()" class="reset-set-btn">Seti Sıfırla</button>
+
+    <div id="retryBadge" class="retry-badge">Yalnış cevaplanan soru</div>
+    <h2 id="questionText" class="question-title">...</h2>
+
+    <div id="optionsArea"></div>
+
+    <div class="quiz-footer">
+      <div id="footerLeft">Kalan: 0</div>
+      <div id="footerRight">0 / 0</div>
+    </div>
+
+    <div id="explanationArea" class="explanation"></div>
+
+    <div class="nav-controls">
+      <button id="prevBtn" class="nav-btn prev-btn" onclick="goBack()" style="visibility:hidden;">❮ Önceki</button>
+      <button id="nextBtn" class="nav-btn next-btn" onclick="goForward()" style="visibility:hidden;">Yeni Soru ❯</button>
+    </div>
+  </div>
+</div>
+
+<div class="source-tag" id="sourceTag">Kaynak: yapayzeka/ balik_hastaliklari_ve_yetistiricilik_yonetimi_versiyon_1</div>
+
+<script>
+  const BASE_SUBJECT = "Balık Hastalıkları ve Yetiştiricilik Yönetimi";
+  const VERSION_NUMBER = 1;
+
+  function buildVersionName(base, version) {
+    return `${base} Versiyon ${version}`;
+  }
+
+  function buildVersionSlug(base, version) {
+    return `${base.toLowerCase().replace(/ç/g, "c").replace(/ğ/g, "g").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ş/g, "s").replace(/ü/g, "u").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "")}_versiyon_${version}`;
+  }
+
+  const CURRENT_SUBJECT = BASE_SUBJECT;
+  const VERSION_SLUG = buildVersionSlug(BASE_SUBJECT, VERSION_NUMBER);
+  const SOURCE_TEXT = `Kaynak: yapayzeka/ balik_hastaliklari_ve_yetistiricilik_yonetimi_versiyon_1`;
+  const QUESTIONS_PER_SET = 30;
+
+  const questions = [
+  {
+    "q": "Hastalıkların ortaya çıkışında \"konakçı-patojen-çevre\" üçgenindeki dengenin bozulması esastır. Bu bağlamda metne göre stres, balık hastalıklarının patogenezinde ve epidemiyolojisinde nasıl bir faktör olarak tanımlanmaktadır?",
+    "o": [
+      "Etiyolojik faktör",
+      "Predispoze (hazırlayıcı) faktör",
+      "İnnate immunity (doğuştan gelen) faktörü",
+      "Homeostazis faktörü"
+    ],
+    "c": 1,
+    "e": "B - Metinde stresin hastalıkların patogenezinde 'hazırlayıcı (predispoze) bir faktör' olarak kritik rol üstlendiği açıkça belirtilmiştir."
+  },
+  {
+    "q": "Aşağıdaki kavramları doğru tanımlarıyla eşleştiriniz.\nI. Homeostazis a) Canlının biyolojik sistemini harekete geçiren bir uyarımı takiben sistemin verdiği sonraki reaksiyonların tamamı.\nII. Stres Yanıtı b) Balığın doğuştan gelen direnci ve genel savunma mekanizması.\nIII. İnnate Immunity c) Çevresel, fizyolojik veya biyolojik faktörlerin baskısı altında balığın muhafaza edemediği normal fizyolojik dengesi.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Homeostazis (c) normal fizyolojik denge, Stres Yanıtı (a) uyarımı takiben verilen reaksiyonlar, İnnate Immunity (b) ise doğuştan gelen dirençtir."
+  },
+  {
+    "q": "Balıkların, karasal hayvanlara kıyasla çevresel değişimlere karşı çok daha hassas olmalarının temel fizyolojik nedeni metinde hangi kavramlarla açıklanmıştır?",
+    "o": [
+      "Nöro-endokrin tepki zinciri başlatmaları",
+      "Lenfopeni yaşamaları ve antikor kapasitelerinin düşmesi",
+      "Poikiloterm (soğukkanlı) canlılar olmaları ve sucul ortamla sürekli ozmotik/iyonik etkileşim halinde bulunmaları",
+      "Glukokortikoid hormonu olan kortisol düzeylerinin artış göstermesi"
+    ],
+    "c": 2,
+    "e": "C - Balıkların karasal hayvanlara kıyasla hassas olmalarının nedeni 'poikiloterm (soğukkanlı)' canlılar olmaları ve 'ozmotik ve iyonik etkileşim' halinde bulunmalarıdır."
+  },
+  {
+    "q": "Stres faktörüne maruz kalan balığın vücudunda başlayan nöro-endokrin tepki zincirinde, \"birincil stres yanıtı\" olarak salgılanan hormon grubu aşağıdakilerden hangisidir?",
+    "o": [
+      "Kortikosteroidler",
+      "Glukokortikoidler",
+      "Kortisol",
+      "Katekolaminler"
+    ],
+    "c": 3,
+    "e": "D - Metne göre nöro-endokrin tepki zincirinde birincil stres yanıtı olarak 'katekolaminler (adrenalin/noradrenalin)' salgılanır, bunu kortikosteroidler takip eder."
+  },
+  {
+    "q": "Stresli koşullarda kanda belirgin bir artış gösteren kortisol hormonunun, balığın metabolizması ve bağışıklık sistemi üzerindeki sentezlenmiş etkisi aşağıdakilerden hangisidir?",
+    "o": [
+      "Enerji kaynaklarını \"savaş veya kaç\" tepkisi için mobilize ederken, hayati olmayan diğer sistemleri ve bağışıklığı baskılar.",
+      "Balığın adaptasyon yeteneğini zorlayarak anında tükenme evresine geçmesini ve somatik büyüme oranının artmasını sağlar.",
+      "İnnate immunity'yi güçlendirerek fırsatçı patojenlere karşı duyarlılık artışını tek başına engeller.",
+      "Birincil stres yanıtı olarak adrenalin salgılanmasını durdurur ve lenfosit sayısında artışa neden olur."
+    ],
+    "c": 0,
+    "e": "A - Kortisol, enerji kaynaklarını savaş/kaç tepkisi için mobilize ederken, hayati olmayan diğer sistemleri (ve bağışıklığı) baskılar."
+  },
+  {
+    "q": "Yüksek kortisol seviyesi etkisi altında, balığın bağışıklık sistemi normal işleyişinde bozulur ve lenfosit sayısında azalmaya yol açar. Bu azalma durumu klinik olarak nasıl adlandırılmaktadır?",
+    "o": [
+      "Homeostazis",
+      "Lenfopeni",
+      "Poikiloterm",
+      "Etiyoloji"
+    ],
+    "c": 1,
+    "e": "B - Yüksek kortisol altında bağışıklık bozulur ve lenfosit sayısındaki azalmaya metinde 'lenfopeni' adı verilmiştir."
+  },
+  {
+    "q": "Stresin ileri aşamalarında, balık fizyolojisinin \"tükenme\" evresine girmesinin geri dönüşümü olmayan fizyolojik sonuçları arasında aşağıdakilerden hangisi gösterilemez?",
+    "o": [
+      "Üreme oranının düşmesi",
+      "Somatik büyüme oranında azalma",
+      "Fırsatçı patojenlere karşı duyarlılık artışı ve ölüm",
+      "Anabolik (yapım) faaliyetlerin hızlanması"
+    ],
+    "c": 3,
+    "e": "D - Tükenme evresinde üreme düşer, büyüme azalır, ölüm görülür. 'Anabolik faaliyetlerin hızlanması' yanlış çeldiricidir; metinde anabolik (yapım) faaliyetlerin 'durduğu' belirtilir."
+  },
+  {
+    "q": "Aşağıdaki stres türlerini ve kaynaklarını doğru tanımlarıyla eşleştiriniz.\nI. Akut Stres a) Sürekli devam eden ve balığın adaptasyon yeteneğini zorlayan durum.\nII. Kronik Stres b) Aşırı stoklama yoğunluğu ve subletal amonyak varlığı.\nIII. Kronik Stres Kaynakları c) Dakika veya saatlerle ifade edilebilen kısa süreli uyarılar.",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-c, II-a, III-b",
+      "I-a, II-c, III-b",
+      "I-c, II-b, III-a"
+    ],
+    "c": 1,
+    "e": "B - Akut stres (c) kısa süreli uyarılardır. Kronik stres (a) adaptasyonu zorlayan uzun vadeli durumdur. Kronik stres kaynakları (b) ise aşırı stoklama ve amonyak varlığıdır."
+  },
+  {
+    "q": "Aşağıdakilerden hangisi balık yetiştiriciliğinde karşılaşılan \"Akut Stres\" kaynaklarından biri değildir?",
+    "o": [
+      "Kısa süreli elden geçirme işlemleri",
+      "Hastalık tedavisi uygulamaları",
+      "Su kalitesindeki ani dalgalanmalar",
+      "Balıkların yaşam alanının daralması ve sosyal rekabet (aşırı stoklama yoğunluğu)"
+    ],
+    "c": 3,
+    "e": "D - 'Aşırı stoklama yoğunluğu' ve 'sosyal rekabet' metinde Akut Stres değil, Kronik Stres kaynakları altında listelenmiştir."
+  },
+  {
+    "q": "Kronik strese yol açan ve su kalitesi parametrelerinin sürekli kötü kalmasıyla karakterize edilen durum metinde hangi spesifik örnekle açıklanmıştır?",
+    "o": [
+      "Subletal düzeyde sürekli amonyak varlığı",
+      "Birincil stres yanıtı olarak noradrenalin varlığı",
+      "Su ortamıyla sürekli ozmotik etkileşim varlığı",
+      "Glukokortikoid hormonunun sürekli uyarımı"
+    ],
+    "c": 0,
+    "e": "A - Sürekli kötü su kalitesine maruz kalmanın örneği olarak metinde parantez içinde '(örneğin subletal düzeyde sürekli amonyak varlığı)' ifadesi kullanılmıştır."
+  },
+  {
+    "q": "Stres hormonlarının balığın morfolojisi ve davranışları üzerindeki ilk etkilerinden biri renk değişimleridir. Metne göre balıklarda gözlenen bu renk değişimlerinin fizyolojik temeli hangi hücresel yapı üzerindeki etkileşimle açıklanmaktadır?",
+    "o": [
+      "Kromatoforlar",
+      "Lenfositler",
+      "Eritrositler",
+      "Solungaç lamelleri"
+    ],
+    "c": 0,
+    "e": "A - Metinde stres hormonlarının doğrudan 'kromatoforlar' üzerindeki etkisiyle renk değişimlerinin görüldüğü açıkça ifade edilmiştir."
+  },
+  {
+    "q": "Stres altında kalan balıklarda beslenme ve büyüme fizyolojisi sekteye uğrar. Alınan yemin metabolik enerjiye dönüşümünün bozulması durumunun temel göstergesi aşağıdakilerden hangisidir?",
+    "o": [
+      "Yem değerlendirme oranında (FCR) kötüleşme gözlenmesi",
+      "Somatik büyüme oranının stabil şekilde ilerlemesi",
+      "Anabolik faaliyetlerin kalıcı olarak hızlanması",
+      "Doğuştan gelen direncin (innate immunity) artması"
+    ],
+    "c": 0,
+    "e": "A - Alınan yemin metabolik enerjiye dönüşümünün bozulması durumunda, 'yem değerlendirme oranında (FCR) kötüleşme' gözlendiği belirtilmiştir."
+  },
+  {
+    "q": "Aşağıdaki kimyasal stres kaynakları ve balık fizyolojisindeki etkilerini eşleştiriniz.\nI. İyonize olmamış amonyak (NH3) a) Hücre zarlarından geçerek merkezi sinir sistemini etkiler.\nII. Nitrit (NO2-) b) Kanda hemoglobine bağlanarak oksijen taşınımını engeller.\nIII. Metabolik artık yükü c) Dışkı ve organik yükün parçalanmasıyla toksik etki yaratır.",
+    "o": [
+      "I-a, II-b, III-c",
+      "I-b, II-a, III-c",
+      "I-c, II-b, III-a",
+      "I-a, II-c, III-b"
+    ],
+    "c": 0,
+    "e": "A - Metinde NH3 merkezi sinir sistemini, NO2- oksijen taşınımını etkiler; dışkı ise parçalanarak toksik etki yaratan metabolik artıktır."
+  },
+  {
+    "q": "Nitritin kanda hemoglobine bağlanması sonucu oksijen taşınımının bloke edilmesi tablosu, klinik olarak aşağıdaki hastalıklardan hangisiyle adlandırılmaktadır?",
+    "o": [
+      "Gaz Kabarcığı Hastalığı",
+      "Methemoglobinemi (Kahverengi Kan Hastalığı)",
+      "Lenfopeni",
+      "Hipoksi"
+    ],
+    "c": 1,
+    "e": "B - Nitritin hemoglobine bağlanarak oksijen taşınmasını engellediği bu tablo, 'methemoglobinemi' olarak adlandırılır."
+  },
+  {
+    "q": "Su ürünleri yetiştiriciliğinde balık büyüklüklerinin çok farklı olması \"hiyerarşik stres\" adı verilen tabloya yol açar. Bu durumun canlı üzerindeki yansıması nedir?",
+    "o": [
+      "Kromatoforlarda ani renk açılması",
+      "Büyük balıkların küçükler üzerinde baskı kurması ve yeme ulaşımın engellenmesi",
+      "Su kalitesindeki amonyak miktarını doğrudan artırması",
+      "Ozmotik dengesini bozarak toleransın tamamen yitirilmesi"
+    ],
+    "c": 1,
+    "e": "B - Balık büyüklüklerinin farklı olması, büyüklerin küçükler üzerinde baskı kurmasına ve onların yeme ulaşımını engellemesine neden olur."
+  },
+  {
+    "q": "Balıklarda \"Gaz Kabarcığı Hastalığı\"nın ortaya çıkmasına neden olan asıl fiziksel faktör aşağıdakilerden hangisidir?",
+    "o": [
+      "Gazların (O2, N2) suda aşırı doygunluk seviyesine ulaşması",
+      "Sudaki oksijenin yetersiz kalması (hipoksi)",
+      "Ani sıcaklık değişimleri",
+      "Fotoperiyodun aşırı düzensizliği"
+    ],
+    "c": 0,
+    "e": "A - Çözünmüş gazlarda oksijen ve azot gazlarının aşırı doygunluğu doğrudan 'Gaz kabarcığı hastalığına' yol açar."
+  },
+  {
+    "q": "İşletmelerde uygulanan boylama, yakalama ve ağ değiştirme gibi işlemler mekanik stres yaratır. Bu tür müdahalelerin balığın sekonder enfeksiyonlara açık hale gelmesine zemin hazırlamasının temel nedeni nedir?",
+    "o": [
+      "Kortikosteroid seviyesini anında sıfırlaması",
+      "Merkezî sinir sistemini baskılaması",
+      "Balığın en önemli koruyucu bariyeri olan mukus tabakasına zarar vermesi",
+      "Yem değerlendirme oranını kalıcı olarak artırması"
+    ],
+    "c": 2,
+    "e": "C - Elden geçirme işlemleri, balığın 'mukus tabakasına' hasar verir; enfeksiyonlara zemin hazırlayan kök neden mukus hasarıdır."
+  },
+  {
+    "q": "Aşağıdaki stres faktörlerini, ait oldukları ana stres kaynağı kategorisi ile eşleştiriniz.\nI. Hipoksi a) Yetiştiricilik İşlemlerine Bağlı Stres\nII. Hatalı dozajda tedavi b) Fiziksel Stres\nIII. Kirlilik c) Kimyasal Stres",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-a, II-b, III-c",
+      "I-c, II-a, III-b",
+      "I-b, II-c, III-a"
+    ],
+    "c": 0,
+    "e": "A - Hipoksi Fiziksel, Hatalı tedavi Yetiştiricilik işlemi, Kirlilik ise Kimyasal stres kaynağıdır."
+  },
+  {
+    "q": "\"Nakil (taşıma)\" işlemi kompleks bir süreci ifade eder. Aşağıdakilerden hangisi balık nakli sırasında bir araya gelen bu kompleks stres unsurlarından biri olarak değerlendirilmez?",
+    "o": [
+      "Sarsıntı",
+      "Sıkışıklık",
+      "Hiyerarşik stres",
+      "Su kalitesi değişimleri"
+    ],
+    "c": 2,
+    "e": "C - Metinde nakil kompleksinin unsurları sarsıntı, sıkışıklık ve su kalitesi değişimidir. Hiyerarşik stres Biyolojik kaynaktır."
+  },
+  {
+    "q": "Stresin \"yönetilebilir\" düzeyde tutulması işletmeye çeşitli avantajlar sağlar. Aşağıdakilerden hangisi bu avantajlardan biri değildir?",
+    "o": [
+      "Balıkların büyüme performansının artması",
+      "Fırsatçı patojenlerin su ortamından tamamen izole edilerek yok edilmesi",
+      "Kullanılan yem maliyetlerinin işletme lehine düşmesi",
+      "Hastalık kaynaklı oluşabilecek ölümlerin engellenmesi"
+    ],
+    "c": 1,
+    "e": "B - Stresin yönetilmesi büyümeyi artırır, maliyeti düşürür. Patojenlerin ortamdan tamamen izole edilmesi uydurulmuş bir çeldiricidir."
+  },
+  {
+    "q": "Yetiştiricilik sistemlerinde hastalık etmenlerinin konakçıya ulaşmasını kolaylaştıran bir \"vektör\" görevi gören asıl fiziksel/biyolojik durum aşağıdakilerden hangisidir?",
+    "o": [
+      "Doğal ortamda geniş su kütlelerinde düşük yoğunlukta yaşanması",
+      "Yüksek debili taze su girişi",
+      "Kültür ortamında sınırlı hacimde yüksek biyokütle (stoklama) ile bulunulması",
+      "Sıvı ortam dışında gerçekleştirilmesi"
+    ],
+    "c": 2,
+    "e": "C - Sınırlı hacimde yüksek biyokütle ile bulunulmasının hastalık etmenlerinin konakçıya ulaşmasında vektör görevi gördüğü ifade edilmiştir."
+  },
+  {
+    "q": "Patoloji kuralı bağlamında, enfeksiyon tablosunun başlamasına yol açan asıl neden-sonuç mekanizması aşağıdakilerden hangisidir?",
+    "o": [
+      "Sadece patojenin ortamda kendi kendine çoğalmaya başlaması",
+      "Çevresel stres faktörlerinin balığın bağışıklık sistemini baskılamasıyla çevresel koşulların bozulması",
+      "BOİ'nin balıklar lehine artması",
+      "Patojenlerin yüksek oksijene maruz kalması"
+    ],
+    "c": 1,
+    "e": "B - Enfeksiyonu başlatan unsur sadece patojenin varlığı değil; çevresel stres faktörlerinin balığın bağışıklık sistemini baskılamasıdır."
+  },
+  {
+    "q": "Yoğun (intensif) balık yetiştiriciliğinde, \"bol su\" kullanımının ortamdaki metabolik atıkları uzaklaştırarak uygun su koşullarını devam ettirmesi mekanizması metinde hangi kavramla ifade edilmiştir?",
+    "o": [
+      "Taşıma kapasitesi",
+      "Bohr etkisi",
+      "Ötrofikasyon etkisi",
+      "Dilüsyon (seyreltme) etkisi"
+    ],
+    "c": 3,
+    "e": "D - Yüksek debili taze su girişinin atıkları seyrelterek uzaklaştırmasına '(dilüsyon etkisi)' denilmiştir."
+  },
+  {
+    "q": "Aşağıdaki su kalitesini belirleyen üç ana faktörü eşleştiriniz.\nI. Kullanılan Suyun Özelliği a) Havuz tipi (beton, toprak) ve mühendislik detayları.\nII. Sistemin Yapısı b) Kaynak suyunun başlangıçtaki fiziko-kimyasal yapısı.\nIII. Yönetim c) Yemleme rejimi, stok kontrolü ve hijyen.",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-a, II-b, III-c",
+      "I-c, II-b, III-a",
+      "I-b, II-c, III-a"
+    ],
+    "c": 0,
+    "e": "A - Kullanılan Su (b), Sistemin Yapısı (a), Yönetim ise yemleme ve hijyen uygulamalarıdır (c)."
+  },
+  {
+    "q": "Amonyak suda farklı formlarda bulunur. Özellikle hücre zarlarından kolayca geçebildiği için balıklar için \"son derece toksik\" olan amonyak formu aşağıdakilerden hangisidir?",
+    "o": [
+      "Nitrat (NO3-)",
+      "İyonize (NH4+) form",
+      "İyonize olmamış (NH3) form",
+      "Nitrit (NO2-)"
+    ],
+    "c": 2,
+    "e": "C - Metne göre özellikle 'iyonize olmamış (NH3) formu', hücre zarlarından geçebildiği için son derece toksiktir."
+  },
+  {
+    "q": "Biyolojik Oksijen İhtiyacı (BOİ) seviyesinin yüksek olmasının balık fizyolojisini dolaylı yoldan tehdit etmesinin temel nedeni nedir?",
+    "o": [
+      "Amonyağın oksitlenerek tamamen yok olmasını sağlaması",
+      "Organik maddelerin parçalanması sırasında oksijenin bakteriler tarafından tüketilmesine neden olması",
+      "Suyun pH'ını düşürerek bazik hale getirmesi",
+      "AKM'nin solungaç lamellerini onarması"
+    ],
+    "c": 1,
+    "e": "B - Yüksek BOİ'nin doğrudan sonucu, çözünmüş oksijenin mikroorganizmalar/bakteriler tarafından tüketilmesidir."
+  },
+  {
+    "q": "Yüksek karbondioksit (CO2) seviyelerinin (hiperkapni), kan pH'ını etkileyerek \"oksijenin hemoglobine bağlanmasını zorlaştırması\" olayı metinde hangi terimle açıklanmıştır?",
+    "o": [
+      "Methemoglobinemi",
+      "Bohr etkisi",
+      "Hiperplazi",
+      "Ötrofikasyon"
+    ],
+    "c": 1,
+    "e": "B - Yüksek CO2'nin kan pH'ını etkileyerek oksijenin hemoglobine bağlanmasını zorlaştırması olayına '(Bohr etkisi)' adı verilmiştir."
+  },
+  {
+    "q": "Su kalitesi parametrelerinden Fosfor'un (P) doğrudan toksik olmamakla birlikte dolaylı yoldan su kalitesini bozmasının nedeni aşağıdakilerden hangisidir?",
+    "o": [
+      "Alıcı ortamlarda alg patlamasına (ötrofikasyon) neden olması",
+      "Solungaç lamellerini tıkayarak mekanik hasar vermesi",
+      "Hemoglobine bağlanarak oksijen taşıma kapasitesini bloke etmesi",
+      "Patojen bakteriler için tutunma yüzeyi oluşturması"
+    ],
+    "c": 0,
+    "e": "A - Fosfor toksik olmamasına rağmen 'alıcı ortamlarda ötrofikasyona' neden olarak dolaylı yoldan su kalitesini bozar."
+  },
+  {
+    "q": "Kritik su kalitesi parametrelerini, patolojik etkileriyle eşleştiriniz.\nI. Nitrit (NO2-) a) Eksikliği boğulmaya neden olur.\nII. Çözünmüş Oksijen b) Hemoglobine bağlanarak kahverengi kan hastalığı yapar.\nIII. Askıdaki Katı Madde c) Solungaç lamellerini tıkayarak mekanik hasar verir.",
+    "o": [
+      "I-c, II-b, III-a",
+      "I-a, II-c, III-b",
+      "I-b, II-a, III-c",
+      "I-b, II-c, III-a"
+    ],
+    "c": 2,
+    "e": "C - Nitrit (b) Kahverengi kan hastalığı yapar, Oksijen eksikliği (a) boğulmaya neden olur, AKM (c) solungaçları tıkar."
+  },
+  {
+    "q": "\"Doğru Stoklama Yoğunluğu\" belirlenirken, işletmenin hangi spesifik kapasite sınırını aşmaması gerektiği vurgulanmıştır?",
+    "o": [
+      "Alkalinite sınırı",
+      "Taşıma kapasitesi (carrying capacity)",
+      "Dilüsyon etkisi",
+      "Biyolojik oksijen ihtiyacı (BOİ)"
+    ],
+    "c": 1,
+    "e": "B - Doğru stoklama yoğunluğu tanımlanırken 'sistemin taşıma kapasitesini (carrying capacity) aşmayan' ifadesi kullanılmıştır."
+  },
+  {
+    "q": "Gaz Kabarcığı Hastalığı'nın patofizyolojisi, çözünmüş gazların sıvı fazdan gaz fazına geçme eğilimini açıklayan hangi fiziksel prensibe dayanır?",
+    "o": [
+      "Henry Yasası",
+      "Bohr Etkisi",
+      "Dilüsyon Etkisi",
+      "Methemoglobinemi Yasası"
+    ],
+    "c": 0,
+    "e": "A - Metinde hastalığın patofizyolojisinin 'Henry Yasası' prensiplerine dayandığı ve emboli oluşumunu açıkladığı belirtilmiştir."
+  },
+  {
+    "q": "Aşağıdaki azotlu bileşikleri özellikleriyle eşleştiriniz.\nI. Amonyak (NH3) a) Nitrosomonas bakterilerince oksitlenerek oluşan ve klorürü taklit eden bileşik.\nII. Nitrit (NO2-) b) Balığın %90 oranında doğrudan suya bıraktığı temel atık.\nIII. Nitrat (NO3-) c) En az toksik form.",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-a, II-b, III-c",
+      "I-c, II-a, III-b",
+      "I-b, II-c, III-a"
+    ],
+    "c": 0,
+    "e": "A - Amonyak (b) temel artıktır, Nitrit (a) Nitrosomonas oksidasyonuyla oluşur, Nitrat (c) ise en az toksik formdur."
+  },
+  {
+    "q": "Amonyağın hücre zarlarından kolayca geçen çok daha \"toksik forma\" (NH3) kaymasını tetikleyen temel çevresel değişiklik aşağıdakilerden hangisidir?",
+    "o": [
+      "Su ortamındaki klorür iyonlarının artması",
+      "Su ortamında pH değerinin ve sıcaklığın artması",
+      "Oksijen miktarının aşırı doygunluğa ulaşması",
+      "Mikrobiyal bozunmasının durması"
+    ],
+    "c": 1,
+    "e": "B - Metinde, 'su ortamında pH ve sıcaklık arttığında, kimyasal dengenin toksik forma (NH3) kaydığı' net bir şekilde ifade edilmiştir."
+  },
+  {
+    "q": "Balıkların, tükettikleri azotlu atıklarını \"üreye çevirmek yerine\" ağırlıklı olarak amonyak şeklinde suya bırakmalarının temel fizyolojik nedeni nedir?",
+    "o": [
+      "Amonyağın sinir sistemini uyarması",
+      "Solungaç hasarını önlemesi",
+      "Enerji tasarrufu sağlamak amacı taşıması",
+      "Klorür (Cl-) iyonlarının yetersiz bulunması"
+    ],
+    "c": 2,
+    "e": "C - Metinde, balıkların azotlu atıklarını üreye çevirmek yerine 'enerji tasarrufu sağlamak amacıyla' doğrudan amonyak olarak attığı yazmaktadır."
+  },
+  {
+    "q": "Tatlı su balıklarında nitrit, hangi spesifik iyonu \"taklit ederek\" aktif taşıma yoluyla solungaçlardan kana geçmektedir?",
+    "o": [
+      "Kalsiyum (Ca+2)",
+      "Klorür (Cl-)",
+      "Karbonat (CO3-2)",
+      "Amonyum (NH4+)"
+    ],
+    "c": 1,
+    "e": "B - Metinde, 'tatlı su balıklarında nitrit, sudaki klorür (Cl-) iyonlarını taklit ederek aktif taşıma yoluyla vücuda girer' denilmektedir."
+  },
+  {
+    "q": "Nitrit zehirlenmesinde (Methemoglobinemi), suyun oksijen düzeyi yüksek olsa bile balıkta \"içsel bir boğulma\" meydana gelir. Bunun patolojik nedeni nedir?",
+    "o": [
+      "Oksijenin emboli oluşturması",
+      "Amonyağın solungaç epitelini zayıflatması",
+      "Nitritin hemoglobin molekülündeki demiri yükseltgeyerek kanın oksijen bağlama kapasitesini yok etmesi",
+      "Böbrek fonksiyonlarını durdurması"
+    ],
+    "c": 2,
+    "e": "C - Nitritin hemoglobindeki demiri yükseltgediğini, kanın oksijen bağlayamadığını ve içsel boğulma yaşandığını açıklar."
+  },
+  {
+    "q": "Klinik bulguları toksisite durumlarıyla eşleştiriniz.\nI. Göz fırlaması (ekzoftalmus) a) Akut Amonyak Zehirlenmesi\nII. Çikolata kahverengisi kan b) Gaz Kabarcığı Hastalığı\nIII. Nörolojik bozukluklar c) Methemoglobinemi",
+    "o": [
+      "I-b, II-c, III-a",
+      "I-a, II-b, III-c",
+      "I-b, II-a, III-c",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Göz fırlaması Gaz Kabarcığı (b), kahverengi kan Methemoglobinemi (c), nörolojik bozukluklar Amonyak zehirlenmesinde (a) görülür."
+  },
+  {
+    "q": "Kronik amonyak zehirlenmesinin \"Bakteriyel Solungaç Hastalığı\" için hazırlayıcı faktör olmasının temel mekanizması nedir?",
+    "o": [
+      "Demir iyonlarını bağlaması",
+      "Gaz eğilimini durdurması",
+      "Solungaç epitelini zayıflatarak hücresel hasar (hiperplazi/nekroz) yaratması",
+      "Klorür aktif taşıma pompalarını kapatması"
+    ],
+    "c": 2,
+    "e": "C - Subletal amonyağın solungaç epitelini zayıflatarak hücresel hasar oluşturduğu ve enfeksiyonlara hazırlayıcı faktör görevi gördüğü belirtilir."
+  },
+  {
+    "q": "Gaz Kabarcığı Hastalığı'nda oluşan gaz embolileri ölümcüldür. Bu hastalığın balığı öldüren nihai mekanizması aşağıdakilerden hangisidir?",
+    "o": [
+      "Kılcal damarlarda kan akışının gaz kabarcıkları tarafından mekanik olarak bloke edilmesi (iskemi)",
+      "Nörolojik şoka sokması",
+      "Biyokimyasal reaksiyonla oksijeni sıfırlaması",
+      "Osmoregülasyon sistemini çökerterek aşırı su almasına neden olması"
+    ],
+    "c": 0,
+    "e": "A - Gaz kabarcıklarının hayati organlarda kılcal damarları tıkayarak kan akışını bloke etmesi (iskemi) ölümcül tablonun asıl nedenidir."
+  },
+  {
+    "q": "Azot döngüsünde nitrifikasyonun ilk basamağını gerçekleştiren ve \"amonyağı oksitleyerek nitrite dönüştüren\" bakteri türü hangisidir?",
+    "o": [
+      "Flavobacterium sp.",
+      "Nitrosomonas sp.",
+      "Methemoglobin sp.",
+      "İyonize amonyum"
+    ],
+    "c": 1,
+    "e": "B - Metinde, amonyağı oksitleyerek nitrit oluşumunu sağlayan bakterilerin 'Nitrosomonas türü' olduğu açıkça belirtilmiştir."
+  },
+  {
+    "q": "Nitrat birikiminin engellenemeyip kronikleşerek temel bir problem haline geldiği işletme modeli aşağıdakilerden hangisidir?",
+    "o": [
+      "Sınırlı Su Değişimli Sistemler (RAS - Resirküle Sistemler)",
+      "Sürekli su değişiminin olduğu akıntılı sistemler",
+      "Mikroorganizmaların yoğun olduğu dış havuzlar",
+      "Yüksek debili işletmeler"
+    ],
+    "c": 0,
+    "e": "A - Metne göre Sınırlı Su Değişimli Sistemlerde (RAS) nitrat birikimi engellenemediği için kronik seviyelere ulaşır."
+  },
+  {
+    "q": "Nitrat miktarına \"en çok dikkat edilmesi gereken ve düşük tutulmasının elzem olduğu\" üretim aşaması neresidir?",
+    "o": [
+      "Yetişkin balıkların bulunduğu havuzlar",
+      "Gelişim aşamasındaki embriyo ve larvaların bulunduğu kuluçkahaneler",
+      "Boylama üniteleri",
+      "Taşıma tankları"
+    ],
+    "c": 1,
+    "e": "B - Yetişkinler tolere etse de, embriyoların hassasiyeti nedeniyle 'kuluçkahanelerde' nitrata dikkat edilmelidir."
+  },
+  {
+    "q": "\"Yoğun su ürünleri yetiştiricilik sistemlerinde\" sistemin temel karbondioksit (CO2) kaynağı aşağıdakilerden hangisidir?",
+    "o": [
+      "Amonyağın atılamaması",
+      "Alkalinitenin sıfırlanması",
+      "Fitoplanktonların fotosentez reaksiyonları",
+      "Birim hacimdeki biyokütlenin (balıkların) metabolik solunum faaliyetleri"
+    ],
+    "c": 3,
+    "e": "D - Yoğun sistemlerde biyokütle arttıkça CO2 seviyesini belirleyen temel kaynak balık metabolizmasıdır."
+  },
+  {
+    "q": "Kandaki CO2 miktarının yükselmesiyle karakterize edilen tabloya ne ad verilmektedir?",
+    "o": [
+      "Methemoglobinemi",
+      "Hiperkapni",
+      "Nefrokalsinozis",
+      "Lenfopeni"
+    ],
+    "c": 1,
+    "e": "B - Difüzyon kuralları gereği kandaki karbondioksit miktarının yükseldiği bu tabloya 'Hiperkapni' adı verilir."
+  },
+  {
+    "q": "Kanın asitleşmesinin hemoglobinin oksijene olan ilgisini azaltarak doku hipoksisine yol açması durumu, metinde hangi kavramla tanımlanmaktadır?",
+    "o": [
+      "Henry Yasası",
+      "Bohr ve Root Etkisi",
+      "Taşıma Kapasitesi",
+      "İçsel oto-intoksikasyon"
+    ],
+    "c": 1,
+    "e": "B - Kanın asitleşmesinin hemoglobinin oksijene ilgisini azaltması mekanizması, 'Bohr ve Root Etkisi' olarak açıklanmıştır."
+  },
+  {
+    "q": "Suda bulunan aşırı miktardaki karbondioksitin balık fizyolojisi üzerinde yarattığı dolaylı sonuçlardan \"Nefrokalsinozis\"in fizyolojik karşılığı nedir?",
+    "o": [
+      "Solungaçlarda hücre ölümü",
+      "Demirin yükseltgenmesi",
+      "Metabolik dengenin bozularak böbreklerde kalsiyum birikmesi (böbrek taşı)",
+      "Ekzoftalmus"
+    ],
+    "c": 2,
+    "e": "C - Metinde karbondioksitin böbreklerde kalsiyum birikimini tetikleyerek 'böbrek taşı' oluşturmasına Nefrokalsinozis dendiği belirtilir."
+  },
+  {
+    "q": "Aşağıdaki kavramları eşleştiriniz.\nI. Hiperkapni a) Kanın asidik hale gelmesi.\nII. Respiratorik Asidoz b) Suyun tampon olma kapasitesi.\nIII. Alkalinite c) Kandaki karbondioksit miktarının yükselmesi.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Hiperkapni kandaki CO2 artışı, Respiratorik asidoz kanın asitleşmesi, Alkalinite tamponlama kapasitesidir."
+  },
+  {
+    "q": "Sisteme gelen suyun, pH düşüşüne karşı \"tampon olma kapasitesinin bulunmaması ve pH'ın çok hızlı azalması\" durumunun kimyasal nedeni nedir?",
+    "o": [
+      "Suyun sertliğinin yüksek olması",
+      "Suyun yumuşak ve hafif alkali (düşük alkalinite) bir yapıya sahip olması",
+      "Oksijen miktarının inmesi",
+      "Amonyağın iyonize formda bulunması"
+    ],
+    "c": 1,
+    "e": "B - Suyun yumuşak ve hafif alkali (düşük alkalinite) olması, pH değişimine karşı tampon olma kapasitesini yok eder."
+  },
+  {
+    "q": "Balığın kendi metabolik artığıyla zehirlenmesi olan \"içsel oto-intoksikasyon\" riskinin artmasına yol açan temel fizyolojik mekanizma nedir?",
+    "o": [
+      "Düşük pH'lı (asidik) ortamın, balığın solungaçlarından amonyak atılımını zorlaştırması",
+      "Gaz embolisi yaratması",
+      "Nitritin kana girmesi",
+      "Oksijen ilgisinin artması"
+    ],
+    "c": 0,
+    "e": "A - Asidik ortamda amonyak atımı zorlaşır, içerde kalan amonyak 'içsel oto-intoksikasyona' neden olur."
+  },
+  {
+    "q": "Asidik sulara maruz kalan balıkların solungaçlarında meydana gelen hasarın doğrudan sonucu olarak şekillenen ölümcül problem nedir?",
+    "o": [
+      "Vücut tuzlarının (iyonların) kaybına bağlı \"ozmotik dengesizlik\"",
+      "Kanın taşıma kapasitesinin sıfırlanmasına bağlı \"Kahverengi Kan\"",
+      "Somatik büyümenin durması",
+      "Kalıcı renk solması"
+    ],
+    "c": 0,
+    "e": "A - Asidik suda hasar gören solungaçlara bağlı olarak vücut tuzlarının kaybı ve 'ozmotik dengesizlik' meydana gelir."
+  },
+  {
+    "q": "Deri ve mukus tabakasının oluşturduğu, patojeni tanımaksızın genel bariyer sağlayan savunma mekanizması aşağıdakilerden hangisidir?",
+    "o": [
+      "Non-spesifik (doğal) savunma mekanizması",
+      "Spesifik (kazanılmış) savunma mekanizması",
+      "Obligat patojen bariyeri",
+      "Endoparaziter savunma"
+    ],
+    "c": 0,
+    "e": "A - Deri ve mukus tabakası, patojeni tanımaksızın genel bariyer sağlayan 'non-spesifik' savunma olarak tanımlanmıştır."
+  },
+  {
+    "q": "Patojen sınıflandırmasını eşleştiriniz.\nI. Obligat Patojen a) Normal koşullarda serbest yaşayan ancak stresli balıkta hastalık yapan etmen.\nII. Fakültatif Patojen b) Çoğalabilmek için kesinlikle canlı konakçıya ihtiyaç duyan etmen.",
+    "o": [
+      "I-b, II-a",
+      "I-a, II-b",
+      "I-a, I-b",
+      "II-b, II-a"
+    ],
+    "c": 0,
+    "e": "A - Obligat patojen (b) konakçıya zorunlu ihtiyaç duyar. Fakültatif (a) fırsat bulduğunda hastalık yapar."
+  },
+  {
+    "q": "Fakültatif (fırsatçı) patojenlerin aniden şiddetli bir salgına neden olmasının temel sebebi aşağıdakilerden hangisidir?",
+    "o": [
+      "Patojenin zorunlu forma dönüşmesi",
+      "Çevresel parametrelerin balığın mukus ve lenfosit savunmasını (bağışıklığını) baskılaması",
+      "Dactylogyrus'un suyu asidik yapması",
+      "Patojenin endoparazit formunda yaşaması"
+    ],
+    "c": 1,
+    "e": "B - Çevresel stresörlerin balığın savunma sistemini baskılaması patojene fırsat yaratır."
+  },
+  {
+    "q": "Hücresel yapılarına göre \"Metazoon\" parazitlerin yapısal özelliği aşağıdakilerden hangisidir?",
+    "o": [
+      "Tek hücreden oluşmaları",
+      "Çok hücreli olmaları ve karmaşık yapılara sahip olmaları",
+      "Yalnızca fakültatif olmaları",
+      "Tomit evresinde çoğalmaları"
+    ],
+    "c": 1,
+    "e": "B - Metazoonlar, 'çok hücreli' ve karmaşık yapıya sahip parazitlerdir."
+  },
+  {
+    "q": "Balıklarda \"Beyaz Benek Hastalığı\"na neden olan protozoon (tek hücreli) yıkıcı ektoparazit aşağıdakilerden hangisidir?",
+    "o": [
+      "Dactylogyrus",
+      "Gyrodactylus",
+      "Ichthyophthirius multifiliis",
+      "Fakültatif lenfosit"
+    ],
+    "c": 2,
+    "e": "C - Beyaz Benek Hastalığına neden olan tek hücreli protozoon Ichthyophthirius multifiliis'tir."
+  },
+  {
+    "q": "Beyaz Benek parazitinin yaşam döngüsünde kimyasal tedavilerin \"sadece belirli bir evrede\" işe yaramasının nedeni nedir?",
+    "o": [
+      "Parazitin suya düştüğü serbest \"tomit\" evresinde ilaçlara karşı savunmasız kalması",
+      "Kimyasalların yumurta kabuğunu eritebilmesi",
+      "Antikorların paraziti yok etmesi",
+      "Parazitin endoparazit olarak yaşaması"
+    ],
+    "c": 0,
+    "e": "A - Çoğalmak için suya düştüğü 'serbest yüzen tomit evresi' kimyasal müdahalenin işe yaradığı tek zayıf noktadır."
+  },
+  {
+    "q": "Monogenean trematod türlerini eşleştiriniz.\nI. Dactylogyrus a) Deriye yerleşen ve canlı doğuran ektoparazit.\nII. Gyrodactylus b) Solungaçlara yerleşen ve yumurtlayarak çoğalan ektoparazit.",
+    "o": [
+      "I-b, II-a",
+      "I-a, II-b",
+      "I-a, I-b",
+      "II-b, II-a"
+    ],
+    "c": 0,
+    "e": "A - Dactylogyrus (b) solungaçlara yerleşip yumurtlar. Gyrodactylus (a) deriye yerleşip canlı doğurur."
+  },
+  {
+    "q": "Metne göre \"solungaçlara\" yerleşerek solunum epitelinde hasar yaratan spesifik parazit türü hangisidir?",
+    "o": [
+      "Tomit",
+      "Gyrodactylus",
+      "Trofozoit",
+      "Dactylogyrus"
+    ],
+    "c": 3,
+    "e": "D - Metinde Dactylogyrus'un hedef organının 'solungaçlar' olduğu belirtilmiştir."
+  },
+  {
+    "q": "Gyrodactylus parazitinin konakçı popülasyonunda \"çok hızlı ve patlayıcı bir şekilde\" artmasının temel mekanizması nedir?",
+    "o": [
+      "Kış uykusuna yatabilmesi",
+      "Canlı doğurarak (vivipar) çoğalması sayesinde bekleme süresi olmadan hızla tamamlanması",
+      "İdeal sıcaklık dışındaki balıklara saldırması",
+      "Kana karışması"
+    ],
+    "c": 1,
+    "e": "B - Canlı doğuran (vivipar) yapısı, yumurta bekleme evresini atladığı için hızlı artışa neden olur."
+  },
+  {
+    "q": "Ektoparaziter istilalarda asıl yüksek ölümlerin görülmesinin nedeni aşağıdakilerden hangisidir?",
+    "o": [
+      "Antikorları kopyalaması",
+      "Parazitin açtığı yaraların fırsatçı bakteriler için giriş kapısı oluşturarak \"sekonder enfeksiyonlara\" zemin hazırlaması",
+      "Mukus üretimini durdurması",
+      "Stres hormonu salgılatması"
+    ],
+    "c": 1,
+    "e": "B - Ektoparazitlerin asıl ölümcül etkisi, diğer fırsatçı bakterilerin içeri girmesine ve 'sekonder (ikincil) enfeksiyonlara' yol açmasıdır."
+  },
+  {
+    "q": "Patojenin kan dolaşımına karışarak tüm iç organlarda kanamalara neden olduğu sistemik zehirlenme tablosuna ne ad verilir?",
+    "o": [
+      "Hemorajik Septisemi",
+      "Nefrokalsinozis",
+      "Methemoglobinemi",
+      "Respiratorik Asidoz"
+    ],
+    "c": 0,
+    "e": "A - Bakterilerin kan dolaşımına geçip iç organlarda kanamalı yıkım yarattığı tabloya 'Hemorajik Septisemi' denilmiştir."
+  },
+  {
+    "q": "Bakteriyel patojenleri eşleştiriniz.\nI. Aeromonas salmonicida a) Saddleback (Eyer) lezyonu.\nII. Yersinia ruckeri b) Furunculosis (Çıban) hastalığı.\nIII. Flavobacterium columnare c) Kızıl Ağız (ERM) hastalığı.",
+    "o": [
+      "I-b, II-c, III-a",
+      "I-a, II-b, III-c",
+      "I-c, II-b, III-a",
+      "I-b, II-a, III-c"
+    ],
+    "c": 0,
+    "e": "A - Aeromonas (b) Furunculosis, Yersinia (c) Kızıl Ağız (ERM), Flavobacterium (a) Saddleback lezyonu yapar."
+  },
+  {
+    "q": "Tatlı su balıklarında özellikle sırt yüzgeci etrafında karakteristik \"eyer şeklinde (saddleback)\" lezyonlar oluşturan patojen hangisidir?",
+    "o": [
+      "Vibrio anguillarum",
+      "Gyrodactylus",
+      "Streptococcus iniae",
+      "Flavobacterium columnare"
+    ],
+    "c": 3,
+    "e": "D - Sırt yüzgecinde karakteristik beyaz-sarımtırak eyer lezyonu oluşturan patojen Flavobacterium columnare'dir."
+  },
+  {
+    "q": "\"Tuzlu su (deniz) yetiştiriciliğinde\" en yaygın görülen hemorajik septisemi etkeni olan bakteri hangisidir?",
+    "o": [
+      "Yersinia ruckeri",
+      "Vibrio anguillarum",
+      "Ichthyophthirius multifiliis",
+      "Aeromonas salmonicida"
+    ],
+    "c": 1,
+    "e": "B - Tuzlu su (deniz) sistemlerindeki en yaygın ve yıkıcı Gram-negatif bakteri Vibrio anguillarum'dur."
+  },
+  {
+    "q": "Streptococcus iniae enfeksiyonunun diğerlerinden farklı olarak balıktaki temel etki mekanizması aşağıdakilerden hangisidir?",
+    "o": [
+      "Kahverengi kan oluşturması",
+      "İskemik şoka neden olması",
+      "Doğrudan merkezi sinir sistemine yerleşerek menenjit, dönme hareketi ve nörolojik bozukluklar yapması",
+      "Oksijen alımını durdurması"
+    ],
+    "c": 2,
+    "e": "C - Gram-pozitif Streptococcus iniae, sinir sistemini hedef alarak menenjit ve nörolojik bozukluklar yapar."
+  },
+  {
+    "q": "Osmoregülatör organların iflas etmesi sonucu balığın karın boşluğunda aşırı sıvı birikmesi tablosu klinik olarak nasıl adlandırılır?",
+    "o": [
+      "Asit",
+      "Ekzoftalmus",
+      "Hiperkapni",
+      "Lenfopeni"
+    ],
+    "c": 0,
+    "e": "A - İç organların iflasıyla karın boşluğunda sıvı birikmesi tablosuna klinik olarak 'Asit' adı verilmektedir."
+  },
+  {
+    "q": "Bir Gyrodactylus salgınının hemen ardından Aeromonas enfeksiyonunun patlak vermesinin temel nedeni nedir?",
+    "o": [
+      "Parazitlerin açtığı yaraların serbest yaşayan bakteriler için \"giriş kapısı\" oluşturması",
+      "Zorunlu olarak Dactylogyrus yumurtalarına ihtiyaç duyması",
+      "Amonyak zehirlenmesi başlatması",
+      "Antikor üretimini artırması"
+    ],
+    "c": 0,
+    "e": "A - Parazitlerin açtığı fiziksel yaralar, sudaki fırsatçı bakterilerin kana karışmasına giriş kapısı sağlar."
+  },
+  {
+    "q": "Yersinia ruckeri'nin neden olduğu hastalığa \"Enteric Redmouth (ERM)\" isminin verilmesinin nedeni nedir?",
+    "o": [
+      "Ekzoftalmus yapması",
+      "Kırmızı çıbanlar açması",
+      "Hastalığın en belirgin işaretinin ağız, çene çevresindeki şiddetli hemorajik kanamalar (kızıl ağız) olması",
+      "Mukusu kırmızıya boyaması"
+    ],
+    "c": 2,
+    "e": "C - ERM hastalığı adını, tipik bir bulgu olan 'ağız ve çene çevresindeki kanamalardan (kızıl ağız)' alır."
+  },
+  {
+    "q": "Klinik bulguları eşleştiriniz.\nI. Furunculosis a) Gözün dışarı fırlaması.\nII. Ekzoftalmus b) İç organlarda kanamalı yıkım tablosu.\nIII. Hemorajik Septisemi c) Kas dokusunda erime ve çıbanlar.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Furunculosis (c) çıbandır. Ekzoftalmus (a) gözün fırlamasıdır. Hemorajik septisemi (b) kanamalı yıkımdır."
+  },
+  {
+    "q": "Bilinçsiz antibiyotik kullanımı hastalık yönetimini çökertir. Bu durumun farmakolojik sonucu nedir?",
+    "o": [
+      "BOİ'nin sıfırlanması",
+      "Bakterilerin genetik mutasyonla \"dirençli suşlar\" geliştirmesi ve tedavilerin etkisiz kalması",
+      "Amonyağın oksitlenmesi",
+      "Savunma mekanizmasının güçlenmesi"
+    ],
+    "c": 1,
+    "e": "B - Bilinçsiz kullanım, bakterilerin 'dirençli suşlar' geliştirmesine yol açar ve tedavileri etkisiz kılar."
+  },
+  {
+    "q": "Virüslerin hücresel bir yapıya sahip olmadıkları ve balığın kendi hücre mekanizmasını ele geçirdikleri yaşam formunu tanımlayan kavram nedir?",
+    "o": [
+      "Fakültatif patojen",
+      "Obligat hücre içi patojen",
+      "Monogenean trematod",
+      "Serbest yüzen tomit"
+    ],
+    "c": 1,
+    "e": "B - Virüslerin çoğalamayıp hücre mekanizmasını ele geçirmeleri durumu 'obligat hücre içi patojen' olarak tanımlanır."
+  },
+  {
+    "q": "Yavru balıklarda pankreası yıkan ve \"spiral çizerek yüzmelerine\" neden olan viral etken hangisidir?",
+    "o": [
+      "Saprolegnia spp.",
+      "İnfeksiyöz Pankreatik Nekroz (IPN)",
+      "Viral Hemorajik Septisemi (VHS)",
+      "Streptococcus iniae"
+    ],
+    "c": 1,
+    "e": "B - Yavru balıklarda görülen ve 'spiral yüzme' tablosuna neden olan viral etken İnfeksiyöz Pankreatik Nekroz'dur (IPN)."
+  },
+  {
+    "q": "Viral bir salgında (örneğin VHS), antibiyotik uygulanmasının hastalığın seyrini iyileştirmemesinin temel farmakolojik nedeni nedir?",
+    "o": [
+      "Virüslerin antibiyotiği yapılarına katması",
+      "Antibiyotiklerin hücre dışındaki bakterileri hedef alması, virüslerin ise \"hücre içi\" yapılar olması",
+      "Oksijeni tüketmesi",
+      "Alkalinitesini düşürmesi"
+    ],
+    "c": 1,
+    "e": "B - Virüsler 'hücre içi' obligat patojenler olduğu için, hücre dışını hedef alan antibiyotikler viral salgınlarda işe yaramaz."
+  },
+  {
+    "q": "Patojenleri klinik bulgularıyla eşleştiriniz.\nI. Saprolegnia spp. a) Spiral yüzme hareketi yaptıran viral hastalık.\nII. İnfeksiyöz Pankreatik Nekroz b) İç organlarda şiddetli kanamalı yıkım yaratan virüs.\nIII. Viral Hemorajik Septisemi c) Pamukçuk lezyonları oluşturan fungal hastalık.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Saprolegnia (c) fungal pamukçuktur. IPN (a) spiral yüzme yaptırır. VHS (b) kanamalı virüstür."
+  },
+  {
+    "q": "Fungal hastalıkların (mantarların) kültür ortamlarında ortaya çıkmasını tetikleyen temel çevresel mekanizma nedir?",
+    "o": [
+      "Virüslerin mutasyon geçirmesi",
+      "Hiperkapni ortamlarında hayatta kalabilmesi",
+      "Fiziksel travmaların koruyucu mukus bariyerini yıkarak mantara giriş kapısı (sekonder istila) açması",
+      "pH'ın aniden yükselmesi"
+    ],
+    "c": 2,
+    "e": "C - Fungal hastalıklar fırsatçı (sekonder) patojenlerdir; mukus bariyeri yıkıldığında dokuya yerleşebilirler."
+  },
+  {
+    "q": "Saprolegnia spp. enfeksiyonunda mantarın balığı ölüme götüren asıl patofizyolojik silahı nedir?",
+    "o": [
+      "\"Hif\" adı verilen ipliksi uzantılarının dokuya girip delikler açarak balığın \"osmoregülatör çöküş\" yaşamasına neden olması",
+      "Amonyak sentezini durdurması",
+      "Demiri yükseltgemesi",
+      "Ekzoftalmus tablosunu yaratması"
+    ],
+    "c": 0,
+    "e": "A - Mantarın asıl ölümcül etkisi, 'Hif' adlı ipliksi yapılarının dokuya girip balıkta osmoregülatör çöküş yaratmasıdır."
+  },
+  {
+    "q": "Mantar tedavisinde eskiden kullanılan \"Malahit Yeşili\" adlı kimyasalın yasaklanmasının nedeni nedir?",
+    "o": [
+      "Oksijen taşıma kapasitesini sıfırlaması",
+      "Karsinojenik (kanser yapıcı) etkilere sahip olmasının tespit edilmesi",
+      "Dirençli suşlar yaratması",
+      "Kromatoforları tahrip etmesi"
+    ],
+    "c": 1,
+    "e": "B - Malahit Yeşilinin yasaklanma nedeni metinde açıkça 'karsinojenik (kanser yapıcı) etkilere sahip olması' olarak belirtilmiştir."
+  },
+  {
+    "q": "Hastalıklar ortaya çıkmadan önceki süreçlere odaklanan yönetimsel \"koruyucu hekimlik\" stratejisinin genel adı nedir?",
+    "o": [
+      "Profilaksi (Aşılama ve Biyogüvenlik)",
+      "Dilüsyon etkisi",
+      "Taşıma kapasitesinin artırılması",
+      "Henry Yasası"
+    ],
+    "c": 0,
+    "e": "A - Hastalık gelmeden önce alınan aşı ve biyogüvenlik gibi koruyucu hekimlik uygulamalarına 'Profilaksi' denilmektedir."
+  },
+  {
+    "q": "Terimleri tanımlarıyla eşleştiriniz.\nI. Hif a) Biyogüvenlik önlemleri.\nII. Profilaksi b) Mantarların dokuya nüfuz eden kök benzeri uzantıları.\nIII. Obligat hücre içi patojen c) Konakçı hücresine girmek zorunda olan ajan.",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-a, II-c, III-b",
+      "I-c, II-b, III-a",
+      "I-b, II-c, III-a"
+    ],
+    "c": 0,
+    "e": "A - Hif (b) mantarın yapısıdır. Profilaksi (a) koruyucu hekimliktir. Obligat hücre içi patojen (c) virüslerin yaşam tarzıdır."
+  },
+  {
+    "q": "İnfeksiyöz Pankreatik Nekroz (IPN) ve Saprolegnia spp. arasındaki belirgin patolojik fark hangisidir?",
+    "o": [
+      "IPN sekonder fırsatçı, Saprolegnia obligat hücre içi patojendir.",
+      "IPN kimyasallarla, Saprolegnia aşı ile tedavi edilir.",
+      "IPN hücre içine yerleşen birincil bir viral etken iken; Saprolegnia deri tahribatıyla dokuyu saran sekonder fungal etkendir.",
+      "Her ikisi de bakteriyeldir."
+    ],
+    "c": 2,
+    "e": "C - IPN birincil viral bir hastalıktır. Saprolegnia ise deri tahribatını bekleyen sekonder fungal bir hastalıktır."
+  },
+  {
+    "q": "Su ürünleri sistemlerinde enfeksiyonun aynı nesil içinde bireyden bireye, su veya ekipmanlar aracılığıyla yayılmasına ne ad verilmektedir?",
+    "o": [
+      "Vertikal Bulaşma",
+      "İntra-ovum Bulaşma",
+      "Horizontal Bulaşma",
+      "Konjenital Bulaşma"
+    ],
+    "c": 2,
+    "e": "C - Metinde enfeksiyonun aynı nesil içinde bireyden bireye, su veya ekipmanlar aracılığıyla yayılmasına 'Horizontal Bulaşma' adı verilmektedir."
+  },
+  {
+    "q": "Vertikal bulaşmanın kontrol edilmesinin (engellenmesinin) \"çok zor olmasının\" temel fizyolojik nedeni aşağıdakilerden hangisidir?",
+    "o": [
+      "Sadece solungaçlardan giriş yapabilmesi",
+      "Patojenlerin döllenme öncesi/sırasında yumurtanın içine (intra-ovum) yerleşebilmesi ve iyot gibi yüzey dezenfektanlarının ulaşamaması",
+      "Suyun vektör görevi görmesi",
+      "Ergin balıkların bağışıklığının zayıf olması"
+    ],
+    "c": 1,
+    "e": "B - Vertikal bulaşmanın kontrolü zordur çünkü patojen yumurta içine (intra-ovum) yerleştiğinden dış yüzey dezenfektanları patojene etki edemez."
+  },
+  {
+    "q": "Patojen giriş kapılarını eşleştiriniz.\nI. Gastrointestinal Yol a) Tek katlı epitel yapısı ve zengin kılcal ağıyla ideal bir giriş noktasıdır.\nII. Solungaçlar b) Fırsatçı sekonder enfeksiyonların girişini hızlandıran, bütünlüğün bozulmasıyla açılan kapıdır.\nIII. Deri ve Mukoza c) Fekal-oral yolla tüketilmesiyle enfeksiyonu başlatan kapıdır.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 0,
+    "e": "A - Gastrointestinal Yol (c) fekal-oral yolla enfeksiyonu başlatır. Solungaçlar (a) tek katlı epitel ile kapıdır. Deri ve Mukoza (b) sekonder enfeksiyonlara kapı açar."
+  },
+  {
+    "q": "Mide asidine dirençli olan patojenlerin epitele tutunarak kana karıştığı ve hem lokal hem genel hastalıklara yol açtığı giriş kapısı hangisidir?",
+    "o": [
+      "Deri ve Pullar",
+      "Gözler",
+      "Solungaçlar",
+      "Sindirim Sistemi"
+    ],
+    "c": 3,
+    "e": "D - Mide asidine dirençli etkenlerin epitele tutunarak girdiği açıklık 'Sindirim Sistemi (Gastrointestinal Yol)' olarak belirtilmiştir."
+  },
+  {
+    "q": "IPN'in epidemiyolojik olarak kontrolünü zorlaştıran özellik aşağıdakilerden hangisidir?",
+    "o": [
+      "Sadece horizontal yayılması",
+      "Hem vertikal hem horizontal bulaşabilmesi, ergin bireylerde hastalık yapmayıp \"taşıyıcılık (portörlük)\" yaratması",
+      "Sadece solungaçlardan girebilmesi",
+      "İyotla yok edilebilmesi"
+    ],
+    "c": 1,
+    "e": "B - IPN'in mücadelesini zorlaştıran şey hem vertikal hem horizontal bulaşması ve ergin bireylerde 'taşıyıcılık' (portörlük) yaratmasıdır."
+  },
+  {
+    "q": "Pastörellozis hastalığının yarattığı yıkıcı ekonomik etkinin temel epidemiyolojik sebebi nedir?",
+    "o": [
+      "Sadece yavru döneminde görülmesi",
+      "Sadece vertikal yolla bulaşması",
+      "\"Ergin\" balıklarda duyarlılığın yüksek olması ve hasat boyuna gelmiş maliyetli balıkların kaybedilmesi",
+      "Mantar kökenli olması"
+    ],
+    "c": 2,
+    "e": "C - Pastörellozis hastalığında 'Ergin' balıkların duyarlılığı yüksektir, bu da hasat boyuna gelen balıkların kaybı anlamına geldiğinden ekonomik etkisi büyüktür."
+  },
+  {
+    "q": "Hastalıkları ve konakçı duyarlılığı gösterdikleri kritik evreleri eşleştiriniz.\nI. Saprolegniazis a) \"Yavru\" döneminde duyarlılık çok yüksektir.\nII. Soğuk Su Hastalığı b) \"Yumurta\" döneminde duyarlılık çok yüksektir.\nIII. Pastörellozis c) \"Ergin\" (hasat boyu) döneminde duyarlılık yüksektir.",
+    "o": [
+      "I-b, II-a, III-c",
+      "I-a, II-b, III-c",
+      "I-c, II-a, III-b",
+      "I-b, II-c, III-a"
+    ],
+    "c": 0,
+    "e": "A - Saprolegniazis (b) yumurta döneminde etkilidir. Soğuk Su Hastalığı (a) yavrularda görülür. Pastörellozis (c) erginlerde görülür."
+  },
+  {
+    "q": "Deride lezyonlar oluştuğunda sistemde fırsatçı olarak bekleyen patojenlerin başlattığı hastalık tablosuna ne ad verilir?",
+    "o": [
+      "Konjenital Enfeksiyon",
+      "Sekonder (İkincil) Enfeksiyon",
+      "Vertikal Transmisyon",
+      "Fekal-Oral Enfeksiyon"
+    ],
+    "c": 1,
+    "e": "B - Deri bütünlüğünün bozulması sonucu fırsatçı mantar ve bakterilerin giriş yapmasına 'sekonder enfeksiyonlar' denilmektedir."
+  },
+  {
+    "q": "Hem vertikal hem horizontal bulaşan ve yavrularda yüksek ölüm yapan \"Enterik Kızılağız\" hastalığının kısaltması nedir?",
+    "o": [
+      "IPN",
+      "SPF",
+      "ERM",
+      "Vibriozis"
+    ],
+    "c": 2,
+    "e": "C - Enterik Kızılağız hastalığının kısaltması metinde 'ERM (Yersinia ruckeri)' olarak verilmiştir."
+  },
+  {
+    "q": "Yavrularda tedavi edilmediğinde yatay yolla hızla yayılarak %100'e varan ölüm yapan paraziter hastalık hangisidir?",
+    "o": [
+      "Beyaz Benek Hastalığı",
+      "Furunculosis",
+      "Saprolegniazis",
+      "Pseudo-Böbrek Hastalığı"
+    ],
+    "c": 0,
+    "e": "A - Yavrularda %100'e varan ölüm yapabilen paraziter etken 'Beyaz Benek Hastalığı'dır."
+  },
+  {
+    "q": "İşletmeye alınan asemptomatik balıklara karantina uygulanmasının temel nedeni nedir?",
+    "o": [
+      "Taşıma kapasitesini aşmayı engellemek",
+      "Taşıyıcı (portör) olma ihtimaline karşı, kuluçka süresini gözlemleyerek yayılma riskini elimine etmek",
+      "Enzimleri nötralize etmek",
+      "Genetik iyileştirme yapmak"
+    ],
+    "c": 1,
+    "e": "B - Dışarıdan gelen asemptomatik balıklar 'portör' olabilir. Karantina, kuluçka süresini gözlemlemek için uygulanır."
+  },
+  {
+    "q": "Ultraviyole (UV-C) filtrasyon sisteminin etkinliğini düşüren ve patojenlere \"gölge\" yapan su problemi nedir?",
+    "o": [
+      "Suyun askıda katı madde (tortu) içermesi",
+      "Yüksek sodyum hipoklorit içermesi",
+      "Asidik duruma gelmesi",
+      "Oksijen gazının aşırı doygunluğu"
+    ],
+    "c": 0,
+    "e": "A - UV-C filtrasyon sisteminde suda bulunan 'askıda katı maddelerin (tortu)' patojenlere gölge yapması etkinliği kısıtlar."
+  },
+  {
+    "q": "Dezenfektan maddelerini kullanım alanlarıyla eşleştiriniz.\nI. İyodoforlar a) Deniz balıklarında bit mücadelesinde kullanılan bileşik.\nII. Formol b) Yumurtaların dezenfeksiyonunda kullanılan bileşik.\nIII. Hidrojen Peroksit c) Ektoparazitlere ve mantarlara karşı kullanılan bileşik.",
+    "o": [
+      "I-b, II-c, III-a",
+      "I-a, II-b, III-c",
+      "I-c, II-b, III-a",
+      "I-b, II-a, III-c"
+    ],
+    "c": 0,
+    "e": "A - İyodoforlar (b) yumurtada, Formol (c) ektoparazit ve mantarda, Hidrojen peroksit (a) deniz balıklarında kullanılır."
+  },
+  {
+    "q": "Metne göre dezenfeksiyon uygulamasının amacı aşağıdakilerden hangisidir?",
+    "o": [
+      "Sadece horizontal bulaşmayı durdurmak",
+      "Etken sayısını enfektif (hastalık yapıcı) dozun altına düşürerek hastalık oluşturma baskısını zayıflatmak",
+      "Lizozim enzimlerini sıfırlamak",
+      "DNA'dan silmek"
+    ],
+    "c": 1,
+    "e": "B - Dezenfeksiyon ile etken sayısı 'enfektif dozun' altına düşürülerek hastalık oluşturma baskıları zayıflatılır."
+  },
+  {
+    "q": "Körlüğe neden olan göz parazitlerinin (Diplostomum spp.) zorunlu ara konakçısı olan vektör canlılar hangisidir?",
+    "o": [
+      "Yabani karnivor balıklar",
+      "Makrofajlar",
+      "Balıkçıl kuşlar ve salyangozlar",
+      "Zooplanktonlar"
+    ],
+    "c": 2,
+    "e": "C - Diplostomum spp. göz parazitlerinin taşıyıcısının 'balıkçıl kuşlar ve salyangozlar' olduğu belirtilmiştir."
+  },
+  {
+    "q": "Aşılamanın sağladığı ekonomik ve ekolojik yararlar arasında hangisi gösterilemez?",
+    "o": [
+      "Mortalite ve tedavi maliyetlerinin azalması",
+      "İlaç kalıntısı sorununun azalması",
+      "FCR iyileşmesi",
+      "İmmünosupresyona neden olarak hastalıkları maskelemesi"
+    ],
+    "c": 3,
+    "e": "D - İmmünosupresyon ve hastalık maskeleme aşının değil, 'yetersiz beslenmenin' sonucudur."
+  },
+  {
+    "q": "Enjeksiyon yönteminin her boydaki balığa her an uygulanamamasının nedeni nedir?",
+    "o": [
+      "Aşının mide asidinde bozulması",
+      "Stres yaratması, anestezi gerektirmesi ve balığın fiziksel olarak en az 15-20 gram üzerinde olmasını zorunlu kılması",
+      "Vertikal hastalıklarda etkili olması",
+      "Adjuvanların hepatoma yaratması"
+    ],
+    "c": 1,
+    "e": "B - Enjeksiyon işlemi stres yaratır, anestezi gerektirir ve balığın en az 15-20 gram ağırlıkta olmasını zorunlu kılar."
+  },
+  {
+    "q": "İmmersiyon (Daldırma) yönteminde, antijenler balığın içine nasıl nüfuz eder?",
+    "o": [
+      "Sindirim sistemi / Makrofajlar",
+      "Yüzgeç / Kromatoforlar",
+      "Gözler / Lenfositler",
+      "Solungaç ve deri / \"Antijen Alımı (Uptake)\" hücreleri"
+    ],
+    "c": 3,
+    "e": "D - İmmersiyonda antijenler solungaç ve deri yoluyla girer ve 'Antijen Alımı (Uptake)' hücreleri devreye girer."
+  },
+  {
+    "q": "Oral (yemle) aşılamada aşı yapısının bozulması riskinin fizyolojik nedeni nedir?",
+    "o": [
+      "Midedeki asidik ortam ve pepsin, tripsin gibi sindirim enzimlerinin aşının antijen proteinlerini bozması",
+      "Uptake hücrelerinin zedelenmesi",
+      "Aflatoksin tepkimesi",
+      "Dilüsyon (seyreltme) etkisi"
+    ],
+    "c": 0,
+    "e": "A - Oral aşılamanın dezavantajı, midenin asidik yapısının ve sindirim enzimlerinin (pepsin, tripsin) aşıyı bozmasıdır."
+  },
+  {
+    "q": "Aşılama yöntemlerini karakteristik uygulama pratikleriyle eşleştiriniz.\nI. Enjeksiyon Yöntemi a) \"Booster (pekiştirme)\" aşısı olarak tercih edilen yöntem.\nII. İmmersiyon Yöntemi b) Balığın suya bırakıldığı ve solungaç/deri yoluyla emildiği yöntem.\nIII. Oral Yöntem c) Adjuvanlarla bağışıklık süresinin uzun tutulduğu, karın boşluğuna uygulanan yöntem.",
+    "o": [
+      "I-c, II-a, III-b",
+      "I-a, II-b, III-c",
+      "I-b, II-c, III-a",
+      "I-c, II-b, III-a"
+    ],
+    "c": 3,
+    "e": "D - Enjeksiyon (c) karın boşluğuna, İmmersiyon (b) daldırmayla, Oral (a) ise Booster (pekiştirme) için kullanılır."
+  }
+];
+
+  document.getElementById("mainTitle").textContent = `${BASE_SUBJECT} Deneme Sınavı`;
+  document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+  document.getElementById("sourceTag").textContent = SOURCE_TEXT;
+  document.title = `${BASE_SUBJECT} Deneme Sınavı`;
+
+  if (performance.navigation.type === performance.navigation.TYPE_RELOAD || !sessionStorage.getItem("session_active")) {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith(storagePrefix())) localStorage.removeItem(k);
+    });
+    sessionStorage.setItem("session_active", "true");
+  }
+
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let solvedIndex = -1;
+  let userAnswers = {};
+  let currentSetKey = "";
+  let stats = { correct: 0, wrong: 0 };
+  let wrongQuestionsMode = false;
+
+  function storagePrefix() {
+    return "exam_" + CURRENT_SUBJECT.replace(/\s+/g, "_") + "_";
+  }
+
+  function setStateKey(index) {
+    return storagePrefix() + "state_set_" + index;
+  }
+
+  function wrongQuestionsKey() {
+    return storagePrefix() + "wrong_questions_pool";
+  }
+
+  function getWrongQuestionsPool() {
+    return JSON.parse(localStorage.getItem(wrongQuestionsKey()) || "[]");
+  }
+
+  function saveWrongQuestionsPool(pool) {
+    localStorage.setItem(wrongQuestionsKey(), JSON.stringify(pool));
+  }
+
+  function addWrongQuestionToPool(question) {
+    const pool = getWrongQuestionsPool();
+
+    const exists = pool.some(item =>
+      item.q === question.q &&
+      JSON.stringify(item.o) === JSON.stringify(question.o)
+    );
+
+    if (!exists) {
+      pool.push({
+        q: question.q,
+        o: [...question.o],
+        c: question.c,
+        e: question.e || ""
+      });
+      saveWrongQuestionsPool(pool);
+    }
+  }
+
+  function normalizeQuestion(q, originalIndex) {
+    return {
+      id: q.id || ("q_" + originalIndex + "_" + Math.random().toString(36).slice(2, 8)),
+      originalNo: originalIndex + 1,
+      q: q.q,
+      o: [...q.o],
+      c: q.c,
+      e: q.e || "",
+      isRetry: q.isRetry || false,
+      retryFrom: q.retryFrom || null,
+      retryCount: q.retryCount || 0,
+      answeredCorrectly: q.answeredCorrectly || false
+    };
+  }
+
+  function initMenu() {
+    const menuGrid = document.getElementById("menuGrid");
+    menuGrid.innerHTML = "";
+
+    const totalSets = Math.ceil(questions.length / QUESTIONS_PER_SET);
+
+    let setsPerButton = 1;
+    let buttonCount = totalSets;
+
+    if (buttonCount > 10) {
+      setsPerButton = 2;
+      buttonCount = Math.ceil(totalSets / setsPerButton);
+    }
+
+    buttonCount = Math.min(buttonCount, 10);
+
+    for (let i = 0; i < buttonCount; i++) {
+      const startSetNo = i * setsPerButton + 1;
+      const endSetNo = Math.min(startSetNo + setsPerButton - 1, totalSets);
+
+      const start = (startSetNo - 1) * QUESTIONS_PER_SET;
+      const end = Math.min(endSetNo * QUESTIONS_PER_SET, questions.length);
+
+      if (start >= questions.length) continue;
+
+      const key = setStateKey(i);
+
+      const saved = JSON.parse(localStorage.getItem(key) || "null");
+      const solved = saved ? Object.keys(saved.userAnswers || {}).length : 0;
+      const correct = saved?.stats?.correct || 0;
+      const wrong = saved?.stats?.wrong || 0;
+
+      const totalCurrent = saved?.currentQuestions?.length || (end - start);
+      const isCompleted = saved ? (solved >= totalCurrent && totalCurrent > 0) : false;
+
+      const label = startSetNo === endSetNo
+        ? `Deneme-${startSetNo}`
+        : `Deneme-${startSetNo}-${endSetNo}`;
+
+      const btn = document.createElement("button");
+      btn.className = `menu-btn ${isCompleted ? "locked" : ""}`;
+      btn.innerHTML = `
+        <strong>${label}</strong><br>
+        <small>${end - start} Soru | Çözülen ${solved} (Doğru ${correct} Yanlış ${wrong})</small>
+      `;
+
+      if (!isCompleted) {
+        btn.onclick = () => startSet(i, key, start, end);
+      }
+
+      menuGrid.appendChild(btn);
+    }
+
+    const wrongPool = getWrongQuestionsPool();
+
+    if (wrongPool.length > 0) {
+      const wrongBtn = document.createElement("button");
+      wrongBtn.className = "wrong-menu-btn";
+      wrongBtn.innerHTML = `
+        <strong>Yanlış Yapılan Sorular</strong><br>
+        <small>${wrongPool.length} Soru | Yeniden çöz</small>
+      `;
+      wrongBtn.onclick = openWrongQuestions;
+      menuGrid.appendChild(wrongBtn);
+    }
+  }
+
+  function openWrongQuestions() {
+    const pool = getWrongQuestionsPool();
+    if (!pool.length) return;
+
+    wrongQuestionsMode = true;
+    currentSetKey = storagePrefix() + "wrong_questions_state";
+
+    const saved = JSON.parse(localStorage.getItem(currentSetKey) || "null");
+
+    if (saved) {
+      currentQuestions = saved.currentQuestions;
+      currentIndex = saved.currentIndex;
+      solvedIndex = saved.solvedIndex;
+      userAnswers = saved.userAnswers || {};
+      stats = saved.stats || { correct: 0, wrong: 0 };
+    } else {
+      currentQuestions = pool.map((q, i) => ({
+        id: "wrong_" + i + "_" + Math.random().toString(36).slice(2, 8),
+        originalNo: i + 1,
+        q: q.q,
+        o: [...q.o],
+        c: q.c,
+        e: q.e || "",
+        isRetry: false,
+        retryFrom: null,
+        retryCount: 0,
+        answeredCorrectly: false
+      }));
+
+      currentIndex = 0;
+      solvedIndex = -1;
+      userAnswers = {};
+      stats = { correct: 0, wrong: 0 };
+      saveState();
+    }
+
+    document.getElementById("menuContainer").style.display = "none";
+    document.getElementById("quizContainer").style.display = "block";
+    document.getElementById("headerSubject").textContent = "Yanlış Yapılan Sorular";
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function startSet(idx, key, start, end) {
+    wrongQuestionsMode = false;
+    currentSetKey = key;
+
+    const saved = JSON.parse(localStorage.getItem(key) || "null");
+
+    if (saved) {
+      currentQuestions = saved.currentQuestions;
+      currentIndex = saved.currentIndex;
+      solvedIndex = saved.solvedIndex;
+      userAnswers = saved.userAnswers || {};
+      stats = saved.stats || { correct: 0, wrong: 0 };
+    } else {
+      currentQuestions = questions.slice(start, end).map((q, i) => normalizeQuestion(q, start + i));
+      currentIndex = 0;
+      solvedIndex = -1;
+      userAnswers = {};
+      stats = { correct: 0, wrong: 0 };
+      saveState();
+    }
+
+    document.getElementById("menuContainer").style.display = "none";
+    document.getElementById("quizContainer").style.display = "block";
+    document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function getQuestionTitle(q) {
+    return `Soru-${q.originalNo}: ${q.q}`;
+  }
+
+  function loadQuestion() {
+    const q = currentQuestions[currentIndex];
+    const progress = ((currentIndex + 1) / currentQuestions.length) * 100;
+
+    document.getElementById("progressBar").style.width = progress + "%";
+    document.getElementById("footerLeft").textContent = `Kalan: ${Math.max(currentQuestions.length - (currentIndex + 1), 0)}`;
+    document.getElementById("footerRight").textContent = `${currentIndex + 1} / ${currentQuestions.length}`;
+    document.getElementById("questionText").textContent = getQuestionTitle(q);
+
+    const retryBadge = document.getElementById("retryBadge");
+    retryBadge.style.display = q.isRetry ? "block" : "none";
+
+    const optArea = document.getElementById("optionsArea");
+    const expArea = document.getElementById("explanationArea");
+    optArea.innerHTML = "";
+    expArea.style.display = "none";
+    expArea.innerHTML = "";
+
+    const letters = ["A", "B", "C", "D"];
+
+    q.o.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<strong>${letters[idx]})</strong> ${opt}`;
+
+      if (currentIndex <= solvedIndex) {
+        btn.disabled = true;
+        const userChoice = userAnswers[currentIndex];
+
+        if (idx === userChoice) {
+          if (userChoice === q.c) {
+            btn.classList.add("correct");
+            btn.innerHTML += ` <span class="tick show">✔</span>`;
+          } else {
+            btn.classList.add("wrong");
+          }
+        }
+
+        if (wrongQuestionsMode) {
+          if (idx === q.c) {
+            btn.classList.add("correct");
+            btn.innerHTML += ` <span class="tick show">✔</span>`;
+          }
+          expArea.innerHTML = `<strong>Açıklama:</strong> ${q.e}`;
+          expArea.style.display = "block";
+        } else {
+          if (userChoice === q.c) {
+            expArea.innerHTML = `<strong>Açıklama:</strong> ${q.e}`;
+            expArea.style.display = "block";
+          } else if (q.isRetry) {
+            if (idx === q.c) {
+              btn.classList.add("correct");
+              btn.innerHTML += ` <span class="tick show">✔</span>`;
+            }
+            expArea.innerHTML = `<strong>Açıklama:</strong> ${q.e}`;
+            expArea.style.display = "block";
+          }
+        }
+      } else {
+        btn.onclick = () => selectOption(idx);
+      }
+
+      optArea.appendChild(btn);
+    });
+
+    document.getElementById("prevBtn").style.visibility = currentIndex > 0 ? "visible" : "hidden";
+    document.getElementById("nextBtn").style.visibility = currentIndex <= solvedIndex ? "visible" : "hidden";
+  }
+
+  function selectOption(idx) {
+    const q = currentQuestions[currentIndex];
+    const isCorrect = idx === q.c;
+
+    userAnswers[currentIndex] = idx;
+    solvedIndex = Math.max(solvedIndex, currentIndex);
+
+    if (isCorrect) {
+      stats.correct++;
+      q.answeredCorrectly = true;
+    } else {
+      stats.wrong++;
+
+      if (wrongQuestionsMode) {
+        // Yanlış Yapılan Sorular modunda soru yeniden eklenmez.
+      } else {
+        addWrongQuestionToPool(q);
+
+        if (!q.isRetry) {
+          const retryQuestion = {
+            ...q,
+            isRetry: true,
+            retryFrom: q.originalNo,
+            retryCount: 1
+          };
+
+          const insertIndex = Math.min(currentIndex + 5, currentQuestions.length);
+          currentQuestions.splice(insertIndex, 0, retryQuestion);
+        }
+      }
+    }
+
+    saveState();
+    loadQuestion();
+  }
+
+  function saveState() {
+    localStorage.setItem(currentSetKey, JSON.stringify({
+      currentQuestions,
+      currentIndex,
+      solvedIndex,
+      userAnswers,
+      stats
+    }));
+  }
+
+  function goForward() {
+    if (currentIndex < solvedIndex) {
+      currentIndex = solvedIndex + 1;
+    } else if (currentIndex < currentQuestions.length - 1) {
+      currentIndex++;
+    } else {
+      return showMenu();
+    }
+
+    saveState();
+    loadQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function goBack() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      saveState();
+      loadQuestion();
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function showMenu() {
+    wrongQuestionsMode = false;
+    document.getElementById("headerSubject").textContent = BASE_SUBJECT;
+    document.getElementById("quizContainer").style.display = "none";
+    document.getElementById("menuContainer").style.display = "block";
+    initMenu();
+    window.scrollTo(0, 0);
+  }
+
+  function clearAllStatistics() {
+    if (confirm("Tüm veriler sıfırlansın mı?")) {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(storagePrefix())) localStorage.removeItem(k);
+      });
+      initMenu();
+    }
+  }
+
+  function resetCurrentSet() {
+    if (confirm("Bu deneme sıfırlansın mı?")) {
+      localStorage.removeItem(currentSetKey);
+      showMenu();
+    }
+  }
+
+  initMenu();
+</script>
+</body>
+</html>
